@@ -1,0 +1,117 @@
+import glob
+import os
+from datetime import datetime 
+f=open('rida.txt','r')
+print(dir(f))
+f.close()
+
+def leia_projektifailid(laiend, asukoht="."):
+    if not laiend.startswith("."):
+        laiend="."+laiend
+    return glob.glob(f"*{laiend}")
+
+    asukoht=input("sisesta katalogi asukoht (tühaks jätmisel kasutatakse praegust asukoht):")
+
+    muster=os.path.join(asukoht,f"*{laiend}")
+    failid=glob.glob(muster)
+    return failid
+failid1=leia_projektifailid(".py")
+
+failid2=leia_projektifailid(".txt","Analüüsi_Raportid")
+
+failid3=leia_projektifailid("csv","C:/kasutajad/Dekstop/Andmed")
+
+
+print("Leitud .py failid",failid1)
+print("Leitud .txt failid Analüüsi_Raportid kuutus:",failid2)
+print("Leitud .csv failid C:/kasutaja/Dekstop/Andmed kautus:",failid3)
+
+
+
+def loo_raporti_kataloog(nimi="Analüüsi_Raportid"):
+    if not os.path.exists(nimi):
+        os.mkdir(nimi)
+        return True
+    return False
+
+def leia_failid_algustähe(taht):
+    taht=input("sisesta täht")
+    return glob.glob(f"{taht}*.*")
+
+
+def analuusi_faili_sisu(failitee):
+
+    Kokku_ridade_arv=0
+    Tühjade_ridade_arv=0
+    Märksõna=0
+    for rida in failitee:
+        Kokku_ridade_arv += 1
+        if rida.strip() == "":
+            Tühjade_ridade_arv += 1
+
+            Märksõna += rida.count("TODO")
+            Märksõna += rida.count("FIXME")
+
+    print("Fail:", failitee)
+    print("Kokku ridu:", Kokku_ridade_arv)
+    print("Tühje ridu:", Tühjade_ridade_arv)
+    print("TODO ja FIXME kokku:", Märksõna)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import os
+from analuusaator import *
+
+
+
+
+raport=[]
+
+
+while True:
+    print("-"*40)
+    print("Menüü")
+    print("1.leia_projektifailid")
+    print("2.loo_raporti_kataloog")
+    print("3.leia_failid_algustähe")
+    print("4.analuusi_faili_sisu")
+    print("0.välja")
+    print("-"*40)
+
+
+    valik=int(input("Sisesta valik "))
+
+
+
+    if valik=="1":
+        laiend=input("Sisesta laiend (py)")
+        failid=leia_projektifailid(laiend)
+
+        for fail in failid:
+            tulemus=analuusi_faili_sisu(fail)
+            print(tulemus,fail)
+
+
+
+    elif valik == "2":
+        loodud= loo_raporti_katalood()
+        if loodud:
+            print("Raporti kataloog loodud")
+        else:
+            print("Raporti katalog juba olemas ")
