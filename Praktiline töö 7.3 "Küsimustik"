@@ -1,0 +1,371 @@
+import module
+
+
+def pea_menu():
+    """Peamine menüü funktsioon"""
+    # Laeme kysimused
+    module.laadi_kysimused()
+
+    while True:
+        print("\n" + "=" * 50)
+        print("KÜSIMUSTIKU PROGRAMM")
+        print("=" * 50)
+        print("1. Alusta küsimustikku")
+        print("2. Lisa uus küsimus")
+        print("3. Näita tulemusi")
+        print("4. Lõpeta ja saada aruanne")
+        print("=" * 50)
+
+        valik = input("Vali tegevus (1-4): ").strip()
+
+        if valik == "1":
+            # Mitu inimest kysitleda
+            try:
+                m = int(input("Mitu inimest soovid küsitleda? "))
+                for i in range(m):
+                    module.viib_kysimustikku(5)  # 5 kysimust
+                    if i < m - 1:
+                        print("\n--- Järgmine vastaja ---")
+            except:
+                print("Viga: Sisesta number!")
+
+        elif valik == "2":
+            module.lisa_uus_kysimus()
+
+        elif valik == "3":
+            module.näita_tulemusi()
+
+        elif valik == "4":
+            if module.get_osalejaid() > 0:
+                # Salvestame tulemused
+                module.salvesta_tulemused()
+
+                # Saadame aruande
+                module.saada_aruanne_autorile()
+
+                # Näitame tulemusi
+                module.näita_tulemusi()
+
+                print("\nProgramm lõpetas töö. Head aega!")
+            else:
+                print("\nÜhtegi vastajat ei olnud. Head aega!")
+            break
+
+        else:
+            print("Vale valik! Palun vali 1, 2, 3 või 4.")
+
+
+# Käivitame programmi
+pea_menu()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import random
+import os
+
+# Globaalsed muutujad
+kysimused_ja_vastused = []  # list kujul [ [kysimus, vastus], ... ]
+kysimused = []  # ainult kysimused
+vastused = []  # ainult vastused
+kogu_osalejad = []  # kujul [ [nimi, õigeid, email, edukas], ... ]
+
+
+def laadi_kysimused():
+    """Laeb kysimused failist"""
+    global kysimused_ja_vastused, kysimused, vastused
+
+    # Kui faili pole, loome näidiskysimused
+    if not os.path.exists("kusimused_vastused.txt"):
+        fail = open("kusimused_vastused.txt", "w", encoding="utf-8")
+        fail.write("Mis on Python?:programmeerimiskeel\n")
+        fail.write("Mis värvi on lumi?:valge\n")
+        fail.write("Mitu kuud on aastas?:12\n")
+        fail.write("Eesti pealinn?:Tallinn\n")
+        fail.write("Mitu päeva on nädalas?:7\n")
+        fail.write("Milline on Eesti rahaühik?:euro\n")
+        fail.close()
+
+    kysimused_ja_vastused = []
+    kysimused = []
+    vastused = []
+
+    fail = open("kusimused_vastused.txt", "r", encoding="utf-8")
+    for rida in fail:
+        rida = rida.strip()
+        if rida and ":" in rida:
+            osad = rida.split(":", 1)
+            kysimus = osad[0].strip()
+            vastus = osad[1].strip().lower()
+            kysimused_ja_vastused.append([kysimus, vastus])
+            kysimused.append(kysimus)
+            vastused.append(vastus)
+    fail.close()
+
+
+def salvesta_kysimused():
+    """Salvestab kysimused faili"""
+    fail = open("kusimused_vastused.txt", "w", encoding="utf-8")
+    for paar in kysimused_ja_vastused:
+        fail.write(paar[0] + ":" + paar[1] + "\n")
+    fail.close()
+
+
+def lisa_uus_kysimus():
+    """Lisab uue kysimuse"""
+    print("\n--- Uue küsimuse lisamine ---")
+    uus_kysimus = input("Sisesta uus küsimus: ").strip()
+    uus_vastus = input("Sisesta õige vastus: ").strip().lower()
+
+    if uus_kysimus and uus_vastus:
+        kysimused_ja_vastused.append([uus_kysimus, uus_vastus])
+        kysimused.append(uus_kysimus)
+        vastused.append(uus_vastus)
+        salvesta_kysimused()
+        print("Küsimus lisati edukalt!")
+    else:
+        print("Viga: Küsimus ja vastus ei saa olla tühjad!")
+
+
+def genereeri_email(nimi):
+    """Genereerib emaili nime põhjal"""
+    osad = nimi.strip().split()
+    if len(osad) >= 2:
+        eesnimi = osad[0].lower()
+        perenimi = osad[-1].lower()
+        email = eesnimi + "." + perenimi + "@example.com"
+    else:
+        eesnimi = osad[0].lower()
+        email = eesnimi + "." + eesnimi + "@example.com"
+
+    # Asendame eesti tähed
+    email = email.replace('ä', 'a').replace('ö', 'o')
+    email = email.replace('õ', 'o').replace('ü', 'u')
+    email = email.replace('š', 's').replace('ž', 'z')
+
+    return email
+
+
+def viib_kysimustikku(kysimuste_arv=5):
+    """Viib kysimustiku läbi"""
+    print("\n--- Küsimustiku algus ---")
+
+    # Kontrollime, kas kysimusi on piisavalt
+    if len(kysimused) < kysimuste_arv:
+        print("Viga: Liiga vähe kysimusi!")
+        return
+
+    # Küsi nime
+    nimi = input("Sisesta oma nimi: ").strip()
+    if not nimi:
+        print("Viga: Nimi on kohustuslik!")
+        return
+
+    # Kontrollime, kas juba teinud
+    for osaleja in kogu_osalejad:
+        if osaleja[0].lower() == nimi.lower():
+            print("Viga: " + nimi + " on juba kysimustiku teinud!")
+            return
+
+    print("\nTere, " + nimi + "! Alustame küsimustikku.")
+    print("Saad " + str(kysimuste_arv) + " küsimust.\n")
+
+    # Valime suvalised kysimused
+    indeksid = list(range(len(kysimused)))
+    valitud_indeksid = random.sample(indeksid, kysimuste_arv)
+
+    õigeid_kokku = 0
+
+    # Esitame kysimused
+    for i in range(kysimuste_arv):
+        kysimus_nr = i + 1
+        kysimus_index = valitud_indeksid[i]
+        kysimus_tekst = kysimused[kysimus_index]
+
+        print("Küsimus " + str(kysimus_nr) + ": " + kysimus_tekst)
+        kasutaja_vastus = input("Sinu vastus: ").strip().lower()
+        õige_vastus = vastused[kysimus_index]
+
+        if kasutaja_vastus == õige_vastus:
+            print("Õige! ✓\n")
+            õigeid_kokku += 1
+        else:
+            print("Vale! Õige vastus on: " + õige_vastus + "\n")
+
+    # Määrame tulemuse
+    edukas = õigeid_kokku > kysimuste_arv / 2
+    tulemus_tekst = "SOORITASID" if edukas else "EI SOORITANUD"
+
+    print("\n" + nimi + ", sa said " + str(õigeid_kokku) + " punkti " + str(kysimuste_arv) + "-st.")
+    print("Sa " + tulemus_tekst + " testi!")
+
+    # Salvestame osaleja andmed
+    email = genereeri_email(nimi)
+    osaleja_andmed = [nimi, õigeid_kokku, email, edukas]
+    kogu_osalejad.append(osaleja_andmed)
+
+    # Saadame "emaili" osalejale
+    saada_email_osalejale(osaleja_andmed)
+
+
+def saada_email_osalejale(osaleja):
+    """Saadab emaili osalejale (väljund ekraanile)"""
+    print("\n" + "=" * 50)
+    print("SAADETUD: " + osaleja[2])
+    print("Tere " + osaleja[0] + "!")
+    print("Sinu õigete vastuste arv: " + str(osaleja[1]) + ".")
+    if osaleja[3]:  # edukas
+        print("Sa sooritasid testi edukalt. ✅")
+    else:
+        print("Kahjuks testi ei sooritatud edukalt. ❌")
+    print("=" * 50 + "\n")
+
+
+def saada_aruanne_autorile():
+    """Saadab aruande kysimustiku autorile"""
+    if len(kogu_osalejad) == 0:
+        return
+
+    # Sorteerime osalejad õigete vastuste arvu järgi
+    sorteeri_osalejad = []
+    for osaleja in kogu_osalejad:
+        sorteeri_osalejad.append(osaleja.copy())
+
+    # Lihtne sorteerimine (mull meetod)
+    for i in range(len(sorteeri_osalejad)):
+        for j in range(i + 1, len(sorteeri_osalejad)):
+            if sorteeri_osalejad[i][1] < sorteeri_osalejad[j][1]:
+                # Vahetame kohad
+                temp = sorteeri_osalejad[i]
+                sorteeri_osalejad[i] = sorteeri_osalejad[j]
+                sorteeri_osalejad[j] = temp
+
+    print("\n" + "=" * 50)
+    print("SAADETUD: tootaja@firma.ee")
+    print("\nTere!")
+    print("\nTänased küsimustiku tulemused:\n")
+
+    for i in range(len(sorteeri_osalejad)):
+        osaleja = sorteeri_osalejad[i]
+        olek = "SOBIS" if osaleja[3] else "EI SOBINUD"
+        print(str(i + 1) + ". " + osaleja[0] + " – " + str(osaleja[1]) + " õigesti – " + osaleja[2] + " – " + olek)
+
+    # Parim osaleja
+    parim = sorteeri_osalejad[0]
+    print("\nParim vastaja: " + parim[0] + " (" + str(parim[1]) + " õigesti)")
+    print("\nLugupidamisega,")
+    print("Küsimustiku Automaatprogramm")
+    print("=" * 50)
+
+
+def salvesta_tulemused():
+    """Salvestab kõik tulemused failidesse"""
+    # Edukad osalejad
+    edukad = []
+    for osaleja in kogu_osalejad:
+        if osaleja[3]:  # edukas
+            edukad.append(osaleja.copy())
+
+    # Sorteerime edukad punktide järgi
+    for i in range(len(edukad)):
+        for j in range(i + 1, len(edukad)):
+            if edukad[i][1] < edukad[j][1]:
+                temp = edukad[i]
+                edukad[i] = edukad[j]
+                edukad[j] = temp
+
+    fail = open("oiged.txt", "w", encoding="utf-8")
+    for osaleja in edukad:
+        fail.write(osaleja[0] + " – " + str(osaleja[1]) + " õigesti\n")
+    fail.close()
+
+    # Ebaedukad osalejad
+    ebaedukad = []
+    for osaleja in kogu_osalejad:
+        if not osaleja[3]:  # ebaedukas
+            ebaedukad.append(osaleja[0])
+
+    # Sorteerime ebaedukad tähestiku järgi
+    ebaedukad.sort()
+
+    fail = open("valed.txt", "w", encoding="utf-8")
+    for nimi in ebaedukad:
+        fail.write(nimi + "\n")
+    fail.close()
+
+    # Kõik osalejad
+    fail = open("koik.txt", "w", encoding="utf-8")
+    for osaleja in kogu_osalejad:
+        fail.write(osaleja[0] + ", " + str(osaleja[1]) + ", " + osaleja[2] + "\n")
+    fail.close()
+
+
+def näita_tulemusi():
+    """Näitab tulemusi ekraanil"""
+    if len(kogu_osalejad) == 0:
+        print("\nÜhtegi vastajat veel ei ole!")
+        return
+
+    print("\n" + "=" * 50)
+    print("KÜSIMUSTIKU TULEMUSED")
+    print("=" * 50)
+
+    # Edukad osalejad
+    edukad = []
+    for osaleja in kogu_osalejad:
+        if osaleja[3]:
+            edukad.append(osaleja.copy())
+
+    if len(edukad) > 0:
+        print("\nEdukalt sooritanud:")
+        # Sorteerime punktide järgi
+        for i in range(len(edukad)):
+            for j in range(i + 1, len(edukad)):
+                if edukad[i][1] < edukad[j][1]:
+                    temp = edukad[i]
+                    edukad[i] = edukad[j]
+                    edukad[j] = temp
+
+        for osaleja in edukad:
+            print("  " + osaleja[0] + " – " + str(osaleja[1]) + " õigesti")
+    else:
+        print("\nEdukalt sooritanuid ei ole.")
+
+    print("\nTulemused on saadetud emailidele.")
+    print("=" * 50)
+
+
+def get_kysimused():
+    """Tagastab kysimuste arvu"""
+    return len(kysimused)
+
+
+def get_osalejaid():
+    """Tagastab osalejate arvu"""
+    return len(kogu_osalejad)
